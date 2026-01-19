@@ -17,10 +17,6 @@ export default async function handler(req, res) {
   const API_KEY = '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';
 
   try {
-    console.log('Making request to Anthropic API...');
-    console.log('API Key length:', API_KEY.length);
-    console.log('Request body:', JSON.stringify(req.body).substring(0, 200));
-
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -31,31 +27,20 @@ export default async function handler(req, res) {
       body: JSON.stringify(req.body)
     });
 
-    console.log('Response status:', response.status);
     const data = await response.json();
-    console.log('Response data:', JSON.stringify(data).substring(0, 200));
     
     if (!response.ok) {
-      console.error('API Error:', data);
-      // Send back detailed error info
-      res.status(200).json({ 
-        debugInfo: {
-          status: response.status,
-          error: data,
-          keyLength: API_KEY.length,
-          keyStart: API_KEY.substring(0, 15)
-        }
-      });
-      return;
+      // API returned an error
+      return res.status(response.status).json(data);
     }
 
+    // Success - return the data as-is
     res.status(200).json(data);
   } catch (error) {
-    console.error('Caught error:', error);
-    res.status(200).json({ 
-      debugInfo: {
-        error: error.message,
-        stack: error.stack
+    res.status(500).json({ 
+      error: { 
+        message: error.message,
+        type: 'server_error'
       }
     });
   }

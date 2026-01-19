@@ -76,7 +76,7 @@
             
             showTypingIndicator();
             
-            fetch('https://accio-ai-assistant-git-main-codyreeves-9715s-projects.vercel.app/api/chat', {
+           fetch('https://accio-ai-assistant.vercel.app/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

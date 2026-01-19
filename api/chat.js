@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const API_KEY = process.env.ANTHROPIC_API_KEY || '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';
+  const API_KEY = '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';
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -30,7 +30,12 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (!response.ok) {
-      res.status(response.status).json(data);
+      // Return the full error details for debugging
+      res.status(response.status).json({ 
+        error: data,
+        apiKeyPrefix: API_KEY.substring(0, 20) + '...',
+        apiKeyLength: API_KEY.length
+      });
       return;
     }
 

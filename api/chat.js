@@ -30,13 +30,26 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     if (!response.ok) {
-      // API returned an error
-      return res.status(response.status).json(data);
+      // Log the full error to Vercel logs
+      console.error('Anthropic API Error:', JSON.stringify(data));
+      console.error('Status:', response.status);
+      console.error('Request body:', JSON.stringify(req.body).substring(0, 500));
+      
+      // Return error with details for debugging
+      return res.status(response.status).json({
+        error: data.error || data,
+        debug: {
+          status: response.status,
+          keyPrefix: API_KEY.substring(0, 20),
+          keyLength: API_KEY.length
+        }
+      });
     }
 
     // Success - return the data as-is
     res.status(200).json(data);
   } catch (error) {
+    console.error('Server error:', error);
     res.status(500).json({ 
       error: { 
         message: error.message,

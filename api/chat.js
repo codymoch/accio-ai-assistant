@@ -15,6 +15,7 @@ export default async function handler(req, res) {
   }
   
   const API_KEY = process.env.ANTHROPIC_API_KEY; // ← Changed this line
+  
 
   // Debug logging (remove after fixing)
 console.log('API Key exists?', !!API_KEY);

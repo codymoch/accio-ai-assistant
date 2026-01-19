@@ -15,6 +15,20 @@ export default async function handler(req, res) {
   }
   
   const API_KEY = process.env.ANTHROPIC_API_KEY; // ← Changed this line
+
+  // Debug logging (remove after fixing)
+console.log('API Key exists?', !!API_KEY);
+console.log('API Key prefix:', API_KEY ? API_KEY.substring(0, 15) : 'MISSING');
+console.log('All env vars:', Object.keys(process.env));
+
+if (!API_KEY) {
+  return res.status(500).json({ 
+    error: 'API key not configured. Please set ANTHROPIC_API_KEY in Vercel environment variables.',
+    debug: {
+      envVarsAvailable: Object.keys(process.env)
+    }
+  });
+}
   
   if (!API_KEY) {
     return res.status(500).json({ 

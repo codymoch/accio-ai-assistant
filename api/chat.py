@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 import urllib.request
 import urllib.error
+import os
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -9,7 +10,8 @@ class handler(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         request_data = json.loads(post_data.decode('utf-8'))
         
-        API_KEY = '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'
+        # Get API key from environment variable
+        API_KEY = os.environ.get('ANTHROPIC_API_KEY', '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')
         
         try:
             # Prepare the request

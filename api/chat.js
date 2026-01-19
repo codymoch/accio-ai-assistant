@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const API_KEY = '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';
+  const API_KEY = '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';
 
   
   try {

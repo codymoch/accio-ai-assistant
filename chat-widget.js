@@ -8,7 +8,7 @@
 
 ## Column Definitions:
 
-**Company Information:**
+**Company Information:**    
 - Company Name: The employer/client company name
 - Account: The account identifier used in Accio Data system
 

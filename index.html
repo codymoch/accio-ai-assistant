@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accio Data AI Analytics Demo</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    .animate-spin { 
+      animation: spin 1s linear infinite; 
+      width: 20px;
+      height: 20px;
+      border: 2px solid #1e3a8a;
+      border-top-color: transparent;
+      border-radius: 50%;
+    }
+    @keyframes spin { 
+      from { transform: rotate(0deg); } 
+      to { transform: rotate(360deg); } 
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    const { useState, useRef, useEffect, createElement: h } = React;
+
+    function AccioAIChat() {
+      const [messages, setMessages] = useState([
+        {
+          role: 'assistant',
+          content: '👋 Hello! I\'m your Accio Data AI assistant. Ask me anything about your order data, turnaround times, vendor performance, or search types. For example:\n\n• "Which vendor processed the most searches?"\n• "What\'s the average turnaround time for National Criminal checks?"\n• "Show me all orders for Mark Monitoryes"\n• "How many monitoring orders are there?"'
+        }
+      ]);
+      const [input, setInput] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const chatEndRef = useRef(null);
+
+      const DATA_DICTIONARY = `# Accio Data - Order Export Data Dictionary
+
+## Column Definitions:
+
+**Company Information:**
+- Company Name: The employer/client company name
+- Account: The account identifier used in Accio Data system
+
+**Order Hierarchy:**
+- Master Order Number: Always 0 when new order created. When additional packages added, shows original Order Number
+- Order Number: Unique identifier for each package ordered
+- Suborder Number: 0 for package container, unique numbers for each search within package
+
+**Financial:**
+- Addon Subtotal: Fees charged for this search/package
+- Data Cost: Cost that vendor charges for the data
+- Billed State/Court Fees: Courthouse fees if applicable
+
+**Applicant:**
+- First Name, Last Name: Applicant information
+
+**Package/Product:**
+- Pricebook: Pricebook this order was created from
+- Package: Package/product ordered
+- Request Type: Specific search type (National Criminal, AIM, FACIS, etc.)
+
+**Timing:**
+- TAT (days): Turnaround time in days. -1 if not completed
+- Time Entered: When order/search entered system
+- Time Component Completed: When search component completed
+- Time First Completed: When first marked complete
+
+**Vendor:**
+- Vendor 1 Name: Vendor/supplier who processed (STAYCLEAR MONITOR, ACCIOTEST, Researcher1, etc.)
+- Vendor 1 Disposition: Result/status ("clear" = no issues, empty = pending)
+- Vendor 1 Supplier Fee: Fee charged by supplier
+
+## Business Logic:
+- Suborder = 0: Package container
+- Suborder > 0: Individual searches within package
+- TAT = -1: Not completed
+- Master Order Number > 0: Recurring monitoring check
+- "clear" disposition: No issues found
+- Empty Time Completed: Still pending`;
+
+      const ORDERS_CSV = `Company Name,Account,Master Order number,Order number,Suborder number,Addon subtotal,Data Cost,Billed state/court fees,First name,Last name,Pricebook,Package,Request Type,TAT (days),Time Entered,Time Component Completed,Time first completed,Vendor 1 Name,Vendor 1 Disposition,Vendor 1 Supplier Fee
+Hill Country Rally for Kids,hcrally,759106,810372,0,3,0,0,Mark,Monitoryes,codypricebook,monitor hiddenpackage,monitor hiddenpackage package,-1,1/10/25 5:06,,2/11/25 8:53,,,0
+Hill Country Rally for Kids,hcrally,759106,810372,1637822,0,1,0,Mark,Monitoryes,codypricebook,monitor hiddenpackage,National Criminal,22.15790558,1/10/25 5:06,2/11/25 8:53,2/11/25 8:53,STAYCLEAR MONITOR,clear,1
+Hill Country Rally for Kids,hcrally,759106,810915,0,3,0,0,Mark,Monitoryes,codypricebook,monitor hiddenpackage,monitor hiddenpackage package,-1,2/10/25 5:06,,2/14/25 12:36,,,0
+Hill Country Rally for Kids,hcrally,759106,810915,1638942,0,1,0,Mark,Monitoryes,codypricebook,monitor hiddenpackage,National Criminal,4.312488556,2/10/25 5:06,2/14/25 12:36,2/14/25 12:36,STAYCLEAR MONITOR,clear,1
+Hill Country Rally for Kids,hcrally,0,811932,0,20,0,0,Jack,Smith,codypricebook,A La Carte,A La Carte package,-1,4/28/25 10:17,,,,,0
+Hill Country Rally for Kids,hcrally,0,811932,1640657,4,0.25,0,Jack,Smith,codypricebook,A La Carte,AIM,6.94444E-05,4/28/25 10:17,4/28/25 10:17,,ACCIOTEST,clear,0.25
+Hill Country Rally for Kids,hcrally,0,811932,1640658,0,0,0,Jack,Smith,codypricebook,A La Carte,FACIS,0.002685185,4/28/25 10:17,4/28/25 10:21,,Researcher1,clear,0
+Hill Country Rally for Kids,hcrally,0,811932,1640659,0,1.25,0,Jack,Smith,codypricebook,A La Carte,National Criminal,-1,4/28/25 10:17,,,DEMO MJD WORK QUEUE,,1.25
+Hill Country Rally for Kids,hcrally,813224,813225,0,20,0,0,ff,ff,codypricebook,A La Carte,A La Carte package,-1,10/26/25 9:50,,10/26/25 9:50,,,0
+Hill Country Rally for Kids,hcrally,813224,813225,1643491,4,0.25,0,ff,ff,codypricebook,A La Carte,AIM,1.15741E-05,10/26/25 9:50,10/26/25 9:50,10/26/25 9:50,ACCIOTEST,clear,0.25`;
+
+      const scrollToBottom = () => {
+        if (chatEndRef.current) {
+          chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+
+      useEffect(() => {
+        scrollToBottom();
+      }, [messages]);
+
+      const sendMessage = async () => {
+        if (!input.trim() || isLoading) return;
+
+        const userMessage = input.trim();
+        setInput('');
+        setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+        setIsLoading(true);
+
+        try {
+          const systemPrompt = `You are an AI assistant for Accio Data background screening analytics.
+
+Here is the data dictionary explaining the CSV structure:
+${DATA_DICTIONARY}
+
+Here is the order export data with detailed order and search information:
+${ORDERS_CSV}
+
+Answer questions about this data. Analyze the CSV to provide accurate, specific answers with numbers and details. Format your responses clearly. This is sample data from their actual export format.`;
+
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'claude-3-5-sonnet-20240620',
+              max_tokens: 1024,
+              system: systemPrompt,
+              messages: [{ role: 'user', content: userMessage }]
+            })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            // Show the full error details for debugging
+            throw new Error(JSON.stringify(error, null, 2));
+          }
+
+          const data = await response.json();
+          const assistantMessage = data.content[0].text;
+
+          setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+        } catch (error) {
+          setMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: `❌ Error: ${error.message}. Please check the server logs.` 
+          }]);
+        }
+
+        setIsLoading(false);
+      };
+
+      return h('div', { className: 'flex flex-col h-screen bg-gray-50' },
+        h('div', { className: 'bg-blue-900 text-white p-6 shadow-lg' },
+          h('h1', { className: 'text-2xl font-bold' }, 'Accio Data AI Analytics Demo'),
+          h('p', { className: 'text-blue-200 mt-1' }, 
+            'Ask questions about your order data, turnaround times, and vendor performance')
+        ),
+        h('div', { className: 'flex-1 overflow-y-auto p-6 space-y-4' },
+          messages.map((message, index) =>
+            h('div', { 
+              key: index, 
+              className: 'flex ' + (message.role === 'user' ? 'justify-end' : 'justify-start')
+            },
+              h('div', {
+                className: 'max-w-3xl rounded-lg p-4 ' + (
+                  message.role === 'user'
+                    ? 'bg-blue-900 text-white'
+                    : 'bg-white border border-gray-200 shadow-sm'
+                )
+              },
+                h('div', { className: 'whitespace-pre-wrap' }, message.content)
+              )
+            )
+          ),
+          isLoading && h('div', { className: 'flex justify-start' },
+            h('div', { className: 'bg-white border border-gray-200 rounded-lg p-4 shadow-sm' },
+              h('div', { className: 'animate-spin' })
+            )
+          ),
+          h('div', { ref: chatEndRef })
+        ),
+        h('div', { className: 'border-t border-gray-200 bg-white p-4' },
+          h('div', { className: 'max-w-4xl mx-auto flex gap-3' },
+            h('input', {
+              type: 'text',
+              value: input,
+              onChange: (e) => setInput(e.target.value),
+              onKeyPress: (e) => e.key === 'Enter' && !e.shiftKey && sendMessage(),
+              placeholder: "Ask a question... (e.g., 'Which vendor has the fastest turnaround time?')",
+              className: 'flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+              disabled: isLoading
+            }),
+            h('button', {
+              onClick: sendMessage,
+              disabled: isLoading || !input.trim(),
+              className: 'px-6 py-3 bg-blue-900 text-white rounded-lg hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors'
+            }, 'Send')
+          )
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(AccioAIChat));
+  </script>
+</body>
+</html>

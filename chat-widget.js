@@ -14,9 +14,10 @@ const DATA_DICTIONARY = `# Accio Data - Order Export Data Dictionary
 - Applicant ID: Unique identifier for the applicant (if assigned)
 
 **Order Hierarchy:**
-- Master Order Number: Always 0 when new order created. When additional packages added, shows original Order Number
+- Master Order Number: Always 0 when new order created. When additional packages added, shows original Order Number, the first order created
 - Order Number: Unique identifier for each package ordered
 - Suborder Number: 0 for package container, unique numbers for each search within package
+- The way to tell the number of unique orders for a period of time, is Master Order = 0, Order Number <> 0 and Sub Order =0
 
 **Financial:**
 - Addon Subtotal: Fees charged for this search/package
@@ -58,11 +59,14 @@ Food service: Starbucks, Chipotle, Panda Express, Subway, Papa Johns
 Other retail: Dollar General, TJ Maxx
 Non-profit: Hill Country Rally for Kids`;
 
-const ORDERS_CSV = `Account,UserID,First name,Middle name,Last name,Name suffix,Master Order number,Order number,Suborder number,Time Entered,Request Type,Time first completed,Addon subtotal,Billed state/court fees,Package,Billing Identifier 1,Time Component Completed,Applicant ID,Component Disposition,TAT (days),Vendor 1 Name
+const ORDERS_CSV = `Account,UserID,First name,Middle name,Last name,Name suffix,Master Order number,Order number,Suborder number,Time Entered,Request Type,Time first completed,Addon subtotal,Billed state/court fees,
+Package,Billing Identifier 1,Time Component Completed,Applicant ID,Component Disposition,TAT (days),Vendor 1 Name
 Home Depot,Sue01,Bob,,Jones,,0,5773,0,1/8/26 11:22,A La Carte package,1/9/26 11:32,0,0,A La Carte,,1/9/26 11:32,,,1.006898148,
 Home Depot,Sue01,Bob,,Jones,,0,5773,925015,1/8/26 11:22,Employment_verification,1/9/26 11:32,90,0,A La Carte,,1/9/26 11:32,,unknown,1.006898148,Talx
+Home Depot,Sue01,Justin,,Jones,,0,57744,0,1/8/26 11:22,A La Carte package,1/9/26 11:32,0,0,A La Carte,,1/9/26 11:32,,,1.006898148,
+Home Depot,Sue01,Justin,,Jones,,0,57744,925015,1/8/26 11:22,Employment_verification,1/9/26 11:32,90,22.33,A La Carte,,1/9/26 11:32,,unknown,1.006898148,TRUV
 Home Depot,Sue01,Mark,,Smith,,0,5774,0,1/8/26 13:00,A La Carte package,1/8/26 13:53,0,0,A La Carte,,1/8/26 13:53,,,0.036678241,
-Home Depot,Sue01,Mark,,Smith,,0,5774,925016,1/8/26 13:00,Employment_verification,1/8/26 13:53,90,0,A La Carte,,1/8/26 13:53,,verified,0.036678241,Talx
+Home Depot,Sue01,Mark,,Smith,,0,5774,925016,1/8/26 13:00,Employment_verification,1/8/26 13:53,90,11.22,A La Carte,,1/8/26 13:53,,verified,0.036678241,Talx
 Lowes,Jim22,Sally,,Wright,,0,5776,0,1/8/26 14:17,A La Carte package,1/9/26 14:28,0,0,A La Carte,,1/9/26 14:28,,,1.007673611,
 Lowes,Jim22,Sally,,Wright,,0,5776,925018,1/8/26 14:17,Employment_verification,1/9/26 14:28,90,0,A La Carte,,1/9/26 14:28,,unable to verify,1.007673611,Truv
 Lowes,Hank1,Sue,,Smith,,0,5791,0,1/17/26 5:05,Basic Package package,,0,0,Basic Package,,,,,0,
